@@ -1,4 +1,4 @@
-from source.backend.server import app
+from version1.source.backend.server import app
 
 version = '0.1.0'
 
