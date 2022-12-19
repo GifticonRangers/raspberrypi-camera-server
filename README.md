@@ -9,4 +9,6 @@
 - https://github.com/chamadam/wandlab-cv-streamer 에서 참조
 - 다음 목표: 호스트의 웹캠 영상을 서버에서 뛰우는 것
 3. 11/28(월) - 디헥토리 변경
-ㅜ
+4. 12/20(화) - 클라이언트 웹캡 스트리밍을 서버에서 수신을 함
+- https://skhan.tistory.com/16에서 참조
+- 다음 목표: Flask를 이용한 다른 클라이언트가 스트리밍 확인
