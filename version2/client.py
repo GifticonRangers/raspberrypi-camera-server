@@ -1,38 +1,20 @@
 import socket
-import numpy as np
 import cv2
 
-def recvall(sock, count):
-    buf = b''
-    while count:
-        newbuf = sock.recv(count)
-        if not newbuf:
-          return None
-        buf += newbuf
-        count -= len(newbuf)
-    return buf
+UDP_IP = '127.0.0.1'
+UDP_PORT = 9505
 
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-HOST = '127.0.0.1'
-PORT = 9999
-
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-client_socket.connect((HOST, PORT))
+cap = cv2.VideoCapture(0)
 
 while True:
-    message = '1'
-    client_socket.send(message.encode())
+    ret, frame = cap.read()
+    d = frame.flatten()
+    s = d.tostring()
 
-    length = recvall(client_socket, 16)
-    stringData = recvall(client_socket, int(length))
-    data = np.frombuffer(stringData, dtype='uint8')
+    for i in range(20):
+        sock.sendto(bytes([i]) + s[i * 46080:(i + 1) * 46080], (UDP_IP, UDP_PORT))
 
-    decimg = cv2.imdecode(data, 1)
-    cv2.imshow('Image', decimg)
-
-    key = cv2.waitKey(1)
-    if key == 27:
-        break
-
-client_socket.close()
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
