@@ -18,9 +18,6 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((HOST, PORT))
 s.listen(1)
 
-public_url = ngrok.connect(25565, "tcp", options={"remote_addr": "{}:{}".format("0.tcp.jp.ngrok.io", 25565))
-
-a
 
 @app.route('/recode_start/<subject_name>')
 def recode_start(subject_name):
