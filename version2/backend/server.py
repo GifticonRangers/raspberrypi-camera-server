@@ -1,39 +1,61 @@
+import pickle
 import socket
-import numpy
+import struct
+from datetime import datetime
+
+import app as app
 import cv2
 from flask import Flask
-from flask import Response
-from flask import stream_with_context
+from pyngrok import ngrok
 
-UDP_IP = "127.0.0.1"
-UDP_PORT = 9509
+is_stop = dict()
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind((UDP_IP, UDP_PORT))
+HOST = ''
+PORT = 25565
 
-s = [b'\xff' * 46080 for x in range(20)]
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-app = Flask(__name__)
-@app.route('/stream')
-def stream():
-    try:
-        return Response(
-            stream_with_context(stream_gen()),
-            mimetype='multipart/x-mixed-replace; boundary=frame')
+s.bind((HOST, PORT))
+s.listen(1)
 
-    except Exception as e:
-        print('[Error] stream error: ' + str(e))
+public_url = ngrok.connect(25565, "tcp", options={"remote_addr": "{}:{}".format("0.tcp.jp.ngrok.io", 25565))
 
-def stream_gen():
-    while True:
-        picture = b''
-        data, addr = sock.recvfrom(46081)
-        s[data[0]] = data[1:46081]
+a
 
-        if data[0] == 19:
-            for i in range(20):
-                picture += s[i]
-            frame = numpy.fromstring(picture, dtype=numpy.uint8)
-            frame = frame.reshape(480, 640, 3)
-            yield (b'--frame\r\n'
-                   b'Content-Type: image/jpeg\r\n\r\n' + cv2.imencode('.jpg', frame)[1].tobytes() + b'\r\n')
+@app.route('/recode_start/<subject_name>')
+def recode_start(subject_name):
+    is_stop[subject_name] = False
+    data = b''
+    payload_size = struct.calcsize("L")
+    conn, addr = s.accept()
+
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+    filename = datetime.today().strftime("%Y_%m_%d_%H") + "_" + subject_name + ".avi"
+    out = cv2.VideoWriter("./video/" + filename, fourcc, 10, (640, 480))
+
+    while not is_stop[subject_name]:
+        while len(data) < payload_size:
+            data += conn.recv(4096)
+
+        packed_msg_size = data[:payload_size]
+        data = data[payload_size:]
+        msg_size = struct.unpack("L", packed_msg_size)[0]
+
+        while len(data) < msg_size:
+            data += conn.recv(4096)
+
+        frame_data = data[:msg_size]
+        data = data[msg_size:]
+
+        frame = pickle.loads(frame_data)
+
+        out.write(frame)
+
+    conn.close()
+    cv2.destroyAllWindows()
+    return "PBBS_RECODE_START/" + subject_name
+
+@app.route('/recode_stop/<subject_name>')
+def recode_stop(subject_name):
+    is_stop[subject_name] = True
+    return "PBBS_RECODE_STOP/" + + subject_name

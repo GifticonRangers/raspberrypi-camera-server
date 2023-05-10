@@ -1,17 +1,18 @@
-import socket
 import cv2
+import numpy as np
+import socket
+import sys
+import pickle
+import struct
 
-UDP_IP = '127.0.0.1'
-UDP_PORT = 9509
+# 비디오 경로 읽어오기
+cap = cv2.VideoCapture("")
 
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-cap = cv2.VideoCapture(0)
+clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+clientsocket.connect(('192.168.0.16', 8089))
 
 while True:
     ret, frame = cap.read()
-    d = frame.flatten()
-    s = d.tostring()
-
-    for i in range(20):
-        sock.sendto(bytes([i]) + s[i * 46080:(i + 1) * 46080], (UDP_IP, UDP_PORT))
+    data = pickle.dumps(frame)
+    message_size = struct.pack("L", len(data))
+    clientsocket.sendall(message_size + data)
