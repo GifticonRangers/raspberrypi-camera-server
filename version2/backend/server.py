@@ -22,20 +22,20 @@ app = Flask(__name__)
 def hello():
     return "Hello World!"
 
-@app.route('/recode_start/<subject_name>')
-def recode_start(subject_name):
-    is_stop[subject_name] = False
+@app.route('/record_start/<week>/<time>/<subject_name>')
+def record_start(week, time, subject_name):
+    is_stop[week + "_" + time + "_" + subject_name] = False
     data = b''
     payload_size = struct.calcsize("L")
     conn, addr = s.accept()
     print("연결 성공")
 
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
-    filename = datetime.today().strftime("%Y_%m_%d_%H") + "_" + subject_name + ".avi"
+    filename = datetime.today().strftime("%Y_%m_%d_%H") + "_" + week + "_" + time + "_" + subject_name + ".avi"
     out = cv2.VideoWriter("./video/" + filename, fourcc, 1, (1920, 1080))
     i = 0
 
-    while not is_stop[subject_name]:
+    while not is_stop[week + "_" + time + "_" + subject_name]:
         while len(data) < payload_size:
             data += conn.recv(4096)
 
@@ -50,15 +50,16 @@ def recode_start(subject_name):
         data = data[msg_size:]
 
         frame = pickle.loads(frame_data)
-        i+= 1
+        i += 1
         print(i)
         out.write(frame)
 
     conn.close()
     cv2.destroyAllWindows()
-    return "PBBS_RECODE_START/" + subject_name
+    # return "PBBS_RECORD_START/" + week + "_" + time + "_" + subject_name
+    return "START_RECORDING"
 
-@app.route('/recode_stop/<subject_name>')
-def recode_stop(subject_name):
-    is_stop[subject_name] = True
-    return "PBBS_RECODE_STOP/" + subject_name
+@app.route('/record_stop/<week>/<time>/<subject_name>')
+def record_stop(week, time, subject_name):
+    is_stop[week + "_" + time + "_" + subject_name] = True
+    return "PBBS_RECORD_STOP/" + week + "_" + time + "_" + subject_name
