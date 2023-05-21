@@ -32,7 +32,7 @@ def record_start(week, time, subject_name):
 
     fourcc = cv2.VideoWriter_fourcc(*'DIVX')
     filename = datetime.today().strftime("%Y_%m_%d_%H") + "_" + week + "_" + time + "_" + subject_name + ".avi"
-    out = cv2.VideoWriter("./video/" + filename, fourcc, 1, (1920, 1080))
+    out = cv2.VideoWriter("./video/" + filename, fourcc, 2, (1280, 720))
     i = 0
 
     while not is_stop[week + "_" + time + "_" + subject_name]:
